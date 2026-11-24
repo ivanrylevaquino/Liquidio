@@ -136,6 +136,26 @@ Run backend and frontend independently with auto-reload:
 
 ## 6. Running Tests
 
+Automated test runner scripts are provided for both Arch Linux and Windows PowerShell. These scripts:
+1. Initialize `.venv` and install backend requirements if missing.
+2. Spin up an **isolated temporary SQLite database** via `DATABASE_URL` and a throwaway `JWT_SECRET` (never touching `liquidio.db` or `.env` data).
+3. Execute **Alembic migrations** against the temporary database to verify schema evolution.
+4. Execute the **pytest** test suite.
+5. Validate **frontend compilation** (`npm run build`).
+6. Print a clear PASS/FAIL summary and automatically clean up the temporary database upon exit.
+
+### On Arch Linux / Linux (Bash)
 ```bash
-.venv/bin/pytest backend/tests -v
+bash scripts/test.sh
 ```
+
+### On Windows (PowerShell)
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\test.ps1
+```
+
+### Manual Pytest Run
+You can also run pytest directly inside the virtual environment:
+- **Linux**: `.venv/bin/pytest backend/tests -v`
+- **Windows**: `.venv\Scripts\pytest backend\tests -v`
+*(When run directly, test fixtures automatically isolate execution to a temporary test database).*

@@ -1,62 +1,12 @@
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 import json
-
-from backend.app.main import app
-from backend.app.core.database import Base, get_db
-from backend.app.core.security import hash_password
+from fastapi import HTTPException
 from backend.app.models.user import User
-from backend.app.models.activity_log import ActivityLog
-from backend.app.repositories.user_repository import UserRepository
 from backend.app.repositories.activity_log_repository import ActivityLogRepository
 from backend.app.core.dependencies import require_role
-from fastapi import HTTPException
 
-# Isolated in-memory SQLite database for testing
-SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
-
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-@pytest.fixture(autouse=True)
-def setup_db():
-    Base.metadata.create_all(bind=engine)
-    yield
-    Base.metadata.drop_all(bind=engine)
-
-def override_get_db():
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-app.dependency_overrides[get_db] = override_get_db
-client = TestClient(app)
-
-def create_test_user(username: str, role: str, raw_password: str = "password123") -> User:
-    db = TestingSessionLocal()
-    user = User(
-        username=username,
-        password_hash=hash_password(raw_password),
-        full_name=f"Test {username.capitalize()}",
-        role=role,
-        email=f"{username}@cit.edu",
-        is_active=True
-    )
-    user = UserRepository.create(db, user)
-    db.close()
-    return user
-
-def test_login_success():
-    create_test_user("admin_user", "ADMIN", "secretAdmin123")
+def test_login_success(client, db_session, create_user):
+    create_user("admin_user", "ADMIN", "secretAdmin123")
 
     response = client.post(
         "/api/auth/login",
@@ -73,8 +23,7 @@ def test_login_success():
     assert "password_hash" not in data["user"]
 
     # Verify audit log recorded LOGIN_SUCCESS
-    db = TestingSessionLocal()
-    logs = ActivityLogRepository.get_all(db)
+    logs = ActivityLogRepository.get_all(db_session)
     assert len(logs) == 1
     log = logs[0]
     assert log.action_type == "LOGIN_SUCCESS"
@@ -83,10 +32,9 @@ def test_login_success():
     assert details["username"] == "admin_user"
     assert "password" not in details
     assert "password_hash" not in details
-    db.close()
 
-def test_login_failed_wrong_password():
-    create_test_user("encoder_user", "ENCODER", "correctPassword")
+def test_login_failed_wrong_password(client, db_session, create_user):
+    create_user("encoder_user", "ENCODER", "correctPassword")
 
     response = client.post(
         "/api/auth/login",
@@ -96,8 +44,7 @@ def test_login_failed_wrong_password():
     assert "Invalid username or password" in response.json()["detail"]
 
     # Verify audit log recorded LOGIN_FAILED with NO password or hash in details
-    db = TestingSessionLocal()
-    logs = ActivityLogRepository.get_all(db)
+    logs = ActivityLogRepository.get_all(db_session)
     assert len(logs) == 1
     log = logs[0]
     assert log.action_type == "LOGIN_FAILED"
@@ -107,9 +54,8 @@ def test_login_failed_wrong_password():
     assert details["username"] == "encoder_user"
     assert details["reason"] == "Invalid credentials"
     assert "password" not in details
-    db.close()
 
-def test_login_failed_nonexistent_user():
+def test_login_failed_nonexistent_user(client, db_session):
     response = client.post(
         "/api/auth/login",
         json={"username": "ghost_user", "password": "anyPassword"}
@@ -117,8 +63,7 @@ def test_login_failed_nonexistent_user():
     assert response.status_code == 401
 
     # Verify audit log recorded LOGIN_FAILED with user_id=None
-    db = TestingSessionLocal()
-    logs = ActivityLogRepository.get_all(db)
+    logs = ActivityLogRepository.get_all(db_session)
     assert len(logs) == 1
     log = logs[0]
     assert log.user_id is None
@@ -127,11 +72,10 @@ def test_login_failed_nonexistent_user():
     details = json.loads(log.details_json)
     assert details["attempted_username"] == "ghost_user"
     assert "password" not in details
-    db.close()
 
-def test_rbac_endpoint_access():
-    create_test_user("encoder_user", "ENCODER", "encoderPass")
-    create_test_user("admin_user", "ADMIN", "adminPass")
+def test_rbac_endpoint_access(client, create_user):
+    create_user("encoder_user", "ENCODER", "encoderPass")
+    create_user("admin_user", "ADMIN", "adminPass")
 
     # 1. Login as ENCODER
     res_enc = client.post("/api/auth/login", json={"username": "encoder_user", "password": "encoderPass"})
