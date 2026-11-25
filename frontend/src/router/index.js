@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import ProjectUserView from '../views/ProjectUserView.vue'
 import BudgetConfigView from '../views/BudgetConfigView.vue'
+import ExpenseEntryView from '../views/ExpenseEntryView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const routes = [
@@ -40,14 +41,7 @@ const routes = [
   {
     path: '/expenses',
     name: 'Expenses',
-    component: {
-      template: `
-        <div style="background: white; padding: 2rem; border-radius: 8px; border: 1px solid #e2e8f0;">
-          <h2 style="color: #800000; margin-bottom: 0.5rem;">Manual Expense Entry</h2>
-          <p style="color: #64748b;">Manual expense encoding (UC-1.2) will be connected in Step 5.</p>
-        </div>
-      `
-    },
+    component: ExpenseEntryView,
     meta: { requiresAuth: true }
   },
   {

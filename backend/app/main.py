@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from backend.app.core.config import settings
-from backend.app.controllers import auth_controller, user_controller, project_controller, budget_controller
+from backend.app.controllers import auth_controller, user_controller, project_controller, budget_controller, expense_controller
 
 app = FastAPI(
     title="Liquidio - Expense Classification & Liquidation Reporting System",
@@ -28,6 +28,7 @@ app.include_router(auth_controller.router)
 app.include_router(user_controller.router)
 app.include_router(project_controller.router)
 app.include_router(budget_controller.router)
+app.include_router(expense_controller.router)
 
 @app.get("/api/health", tags=["Health"])
 def health_check():
