@@ -6,20 +6,9 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref(JSON.parse(localStorage.getItem('liquidio_user') || 'null'))
 
   const isAuthenticated = computed(() => !!token.value)
-  const userRole = computed(() => user.value?.role || null)
 
   function getHomeRoute() {
-    if (!user.value) return '/login'
-    switch (user.value.role) {
-      case 'ADMIN':
-        return '/admin'
-      case 'ENCODER':
-        return '/expenses'
-      case 'APPROVER':
-        return '/dashboard'
-      default:
-        return '/dashboard'
-    }
+    return '/projects'
   }
 
   async function login(username, password) {
@@ -52,7 +41,6 @@ export const useAuthStore = defineStore('auth', () => {
     token,
     user,
     isAuthenticated,
-    userRole,
     getHomeRoute,
     login,
     logout

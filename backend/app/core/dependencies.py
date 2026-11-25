@@ -1,7 +1,6 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
-from typing import Callable, List
 import jwt
 
 from backend.app.core.database import get_db
@@ -19,6 +18,7 @@ def get_current_user(
     """
     FastAPI dependency that extracts and validates the JWT Bearer token,
     and returns the authenticated active User domain entity.
+    Protected endpoints require only an authenticated, active user.
     """
     token = credentials.credentials
     try:
@@ -57,22 +57,3 @@ def get_current_user(
             detail="User account is deactivated"
         )
     return user
-
-def require_role(allowed_roles: List[str] | str) -> Callable:
-    """
-    Role-Based Access Control (RBAC) dependency factory.
-    Enforces authorization on the backend for specified roles: ADMIN, ENCODER, APPROVER.
-    Usage: current_user: User = Depends(require_role(["ADMIN"]))
-    """
-    if isinstance(allowed_roles, str):
-        allowed_roles = [allowed_roles]
-
-    def role_checker(current_user: User = Depends(get_current_user)) -> User:
-        if current_user.role not in allowed_roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Access denied: User role '{current_user.role}' is not authorized. Required: {', '.join(allowed_roles)}"
-            )
-        return current_user
-
-    return role_checker

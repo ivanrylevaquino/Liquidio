@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
+import ProjectUserView from '../views/ProjectUserView.vue'
+import BudgetConfigView from '../views/BudgetConfigView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const routes = [
@@ -18,17 +20,22 @@ const routes = [
     meta: { guestOnly: true }
   },
   {
-    path: '/admin',
-    name: 'Admin',
-    component: {
-      template: `
-        <div style="background: white; padding: 2rem; border-radius: 8px; border: 1px solid #e2e8f0;">
-          <h2 style="color: #800000; margin-bottom: 0.5rem;">Project &amp; Budget Setup (ADMIN)</h2>
-          <p style="color: #64748b;">Admin module endpoints and UI will be connected in Steps 3 and 4.</p>
-        </div>
-      `
-    },
-    meta: { requiresAuth: true, roles: ['ADMIN'] }
+    path: '/projects',
+    name: 'Projects',
+    component: ProjectUserView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/budgets',
+    name: 'Budgets',
+    component: BudgetConfigView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/projects/:id/budget',
+    name: 'ProjectBudget',
+    component: BudgetConfigView,
+    meta: { requiresAuth: true }
   },
   {
     path: '/expenses',
@@ -36,12 +43,12 @@ const routes = [
     component: {
       template: `
         <div style="background: white; padding: 2rem; border-radius: 8px; border: 1px solid #e2e8f0;">
-          <h2 style="color: #800000; margin-bottom: 0.5rem;">Manual Expense Entry (ENCODER)</h2>
+          <h2 style="color: #800000; margin-bottom: 0.5rem;">Manual Expense Entry</h2>
           <p style="color: #64748b;">Manual expense encoding (UC-1.2) will be connected in Step 5.</p>
         </div>
       `
     },
-    meta: { requiresAuth: true, roles: ['ENCODER', 'ADMIN'] }
+    meta: { requiresAuth: true }
   },
   {
     path: '/dashboard',
@@ -54,7 +61,7 @@ const routes = [
         </div>
       `
     },
-    meta: { requiresAuth: true, roles: ['ADMIN', 'ENCODER', 'APPROVER'] }
+    meta: { requiresAuth: true }
   }
 ]
 
@@ -63,7 +70,7 @@ const router = createRouter({
   routes
 })
 
-// Global RBAC navigation guard
+// Navigation guard ensuring only authenticated active users access protected routes
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
 
@@ -71,15 +78,8 @@ router.beforeEach((to, from, next) => {
     return next(authStore.getHomeRoute())
   }
 
-  if (to.meta.requiresAuth) {
-    if (!authStore.isAuthenticated) {
-      return next({ path: '/login', query: { redirect: to.fullPath } })
-    }
-
-    if (to.meta.roles && !to.meta.roles.includes(authStore.userRole)) {
-      // Forbidden: redirect user to their authorized home route
-      return next(authStore.getHomeRoute())
-    }
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    return next({ path: '/login', query: { redirect: to.fullPath } })
   }
 
   next()

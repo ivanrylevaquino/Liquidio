@@ -2,17 +2,17 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Literal
 
-RoleType = Literal["ADMIN", "ENCODER", "APPROVER"]
+RoleType = Literal["USER"]
 
 class UserBase(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     full_name: str = Field(..., min_length=1, max_length=100)
-    role: RoleType
+    role: RoleType = "USER"
     email: str | None = Field(default=None, max_length=100)
     is_active: bool = True
 
 class UserCreate(UserBase):
-    password: str = Field(..., min_length=6)
+    password: str = Field(..., min_length=8, description="Minimum 8 characters password")
 
 class UserRead(UserBase):
     id: int

@@ -17,12 +17,8 @@ async function handleLogin() {
 
   try {
     await authStore.login(username.value.trim(), password.value)
-    // Redirect based on role per business rules:
-    // Admin -> Budget/Project setup (/admin)
-    // Encoder -> Manual expense recording (/expenses)
-    // Approver -> Budget monitoring dashboard (/dashboard)
-    const targetRoute = authStore.getHomeRoute()
-    router.push(targetRoute)
+    // Everyone has the same permissions, so all users go to the same home page
+    router.push(authStore.getHomeRoute())
   } catch (err) {
     errorMessage.value = err.message || 'Authentication failed. Please verify credentials.'
   } finally {
@@ -54,7 +50,7 @@ async function handleLogin() {
             type="text"
             required
             autocomplete="username"
-            placeholder="e.g. admin or encoder1"
+            placeholder="Enter your username"
             :disabled="isLoading"
           />
         </div>
@@ -77,13 +73,6 @@ async function handleLogin() {
           <span v-else>Sign In</span>
         </button>
       </form>
-
-      <div class="role-hint">
-        <strong>Role Access Hint:</strong>
-        <p>&bull; <b>ADMIN</b>: Project setup &amp; approved Line-Item Budgets</p>
-        <p>&bull; <b>ENCODER</b>: Manual expense recording &amp; verification</p>
-        <p>&bull; <b>APPROVER</b>: Budget-vs-actual monitoring dashboard</p>
-      </div>
     </div>
   </div>
 </template>
@@ -192,22 +181,5 @@ async function handleLogin() {
 .btn-submit:disabled {
   opacity: 0.65;
   cursor: not-allowed;
-}
-.role-hint {
-  margin-top: 2rem;
-  padding: 1rem;
-  background: #f8fafc;
-  border-radius: 6px;
-  border: 1px dashed #cbd5e1;
-  font-size: 0.8rem;
-  color: #475569;
-}
-.role-hint strong {
-  display: block;
-  margin-bottom: 0.35rem;
-  color: #1e293b;
-}
-.role-hint p {
-  margin: 0.2rem 0;
 }
 </style>
