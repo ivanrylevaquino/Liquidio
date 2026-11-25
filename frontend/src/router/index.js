@@ -3,6 +3,7 @@ import LoginView from '../views/LoginView.vue'
 import ProjectUserView from '../views/ProjectUserView.vue'
 import BudgetConfigView from '../views/BudgetConfigView.vue'
 import ExpenseEntryView from '../views/ExpenseEntryView.vue'
+import BudgetTrackingDashboard from '../views/BudgetTrackingDashboard.vue'
 import { useAuthStore } from '../stores/auth'
 
 const routes = [
@@ -47,14 +48,7 @@ const routes = [
   {
     path: '/dashboard',
     name: 'Dashboard',
-    component: {
-      template: `
-        <div style="background: white; padding: 2rem; border-radius: 8px; border: 1px solid #e2e8f0;">
-          <h2 style="color: #800000; margin-bottom: 0.5rem;">Budget Tracking Dashboard</h2>
-          <p style="color: #64748b;">Budget vs. Actual monitoring (UC-1.3) will be connected in Step 6.</p>
-        </div>
-      `
-    },
+    component: BudgetTrackingDashboard,
     meta: { requiresAuth: true }
   }
 ]
