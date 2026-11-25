@@ -5,8 +5,8 @@ from backend.app.core.database import Base
 
 class User(Base):
     """
-    Authenticated system user. Roles: ADMIN, ENCODER, APPROVER.
-    Passes RBAC verification across API endpoints.
+    Authenticated system user entity.
+    All users share the same permission level (role is always 'USER').
     """
     __tablename__ = "users"
 
@@ -14,7 +14,7 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     full_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    role: Mapped[str] = mapped_column(String(20), nullable=False) # ENCODER, APPROVER, ADMIN
+    role: Mapped[str] = mapped_column(String(20), default="USER", nullable=False)
     email: Mapped[str | None] = mapped_column(String(100), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)

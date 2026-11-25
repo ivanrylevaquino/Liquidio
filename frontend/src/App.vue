@@ -26,13 +26,13 @@ function handleLogout() {
         </div>
 
         <nav class="nav-links" v-if="currentUser">
+          <router-link to="/projects" class="nav-item">Projects &amp; Users</router-link>
+          <router-link to="/budgets" class="nav-item">Line-Item Budgets</router-link>
+          <router-link to="/expenses" class="nav-item">Encode Expense</router-link>
           <router-link to="/dashboard" class="nav-item">Dashboard</router-link>
-          <router-link v-if="currentUser.role === 'ADMIN'" to="/admin" class="nav-item">Admin</router-link>
-          <router-link v-if="currentUser.role === 'ENCODER' || currentUser.role === 'ADMIN'" to="/expenses" class="nav-item">Encode Expense</router-link>
 
           <div class="user-badge">
             <span class="user-name">{{ currentUser.full_name }}</span>
-            <span class="role-pill">{{ currentUser.role }}</span>
             <button @click="handleLogout" class="btn-logout" title="Sign out">Logout</button>
           </div>
         </nav>
@@ -104,9 +104,9 @@ function handleLogout() {
 .user-badge {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   background: rgba(0,0,0,0.25);
-  padding: 0.3rem 0.6rem;
+  padding: 0.3rem 0.75rem;
   border-radius: 6px;
   margin-left: 0.5rem;
 }
@@ -114,14 +114,6 @@ function handleLogout() {
   font-size: 0.85rem;
   font-weight: 600;
   color: #f8fafc;
-}
-.role-pill {
-  background: #fde047;
-  color: #800000;
-  font-size: 0.7rem;
-  padding: 0.15rem 0.45rem;
-  border-radius: 3px;
-  font-weight: 800;
 }
 .btn-logout {
   background: transparent;
