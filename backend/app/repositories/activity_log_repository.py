@@ -18,11 +18,13 @@ class ActivityLogRepository:
         entity_id: int | None = None,
         user_id: int | None = None,
         details: Dict[str, Any] | None = None,
-        ip_address: str | None = None
+        ip_address: str | None = None,
+        commit: bool = True
     ) -> ActivityLog:
         """
         Appends an immutable audit log record.
         Sensitive credentials (e.g. passwords, hashes) are strictly excluded from details.
+        When commit=False, flushes without committing so callers can manage a single transaction.
         """
         # Ensure details dictionary never contains sensitive password fields
         sanitized_details = {}
@@ -40,8 +42,11 @@ class ActivityLogRepository:
             ip_address=ip_address
         )
         db.add(log_entry)
-        db.commit()
-        db.refresh(log_entry)
+        if commit:
+            db.commit()
+            db.refresh(log_entry)
+        else:
+            db.flush()
         return log_entry
 
     @staticmethod
